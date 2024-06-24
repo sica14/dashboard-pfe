@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta - iCurti</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            color: white;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 50px 1fr 50px;
+            grid-template-areas:
+                'aside header'
+                'aside main'
+                'aside footer';
+            height: 100vh;
+        }
+
+        .header {
+            grid-area: header;
+            background-color: #6df161;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: darkblue;
+            padding: 0 15px;
+        }
+
+        .aside {
+            grid-area: aside;
+            background-color: #0047AB;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 240px;
+            position: relative;
+        }
+
+        .main {
+            grid-area: main;
+            background-color: white;
+            padding: 20px;
+            color: black;
+        }
+
+        .footer {
+            grid-area: footer;
+            background-color: whitesmoke;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: darkblue;
+        }
+
+        .aside_list {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
+
+        .aside_list-item {
+            padding: 20px;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .aside_list-item:hover {
+            background-color: royalblue;
+        }
+        
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .delete-btn {
+            background-color: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #account-info {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-container">
+        <aside class="aside">
+            <img src="img/logo-icurti.svg" alt="Logo do iCurti" width="150" height="60">
+            <ul class="aside_list">
+                <li class="aside_list-item" data-section="minhas-compras">Minhas Compras</li>
+                <li class="aside_list-item" data-section="minhas-listas">Minhas Listas</li>
+                <li class="aside_list-item" data-section="meu-cadastro">Meu Cadastro</li>
+                <li class="aside_list-item"><a href="index.html">Sair</a></li>
+            </ul>
+        </aside>
+        <header class="header">
+            <div class="header_search">Minha Conta</div>
+        </header>
+        <main class="main">
+            <div id="account-info">
+                <h2>Informações da Conta</h2>
+                <p id="user-name"></p>
+                <p id="user-email"></p>
+            </div>
+            <div id="content"></div>
+        </main>
+        <footer class="footer">
+            <div>&copy; 2024 iCurti</div>
+        </footer>
+    </div>
+    <script>
+        // Função para carregar informações da conta
+        function loadAccountInfo() {
+            const userName = localStorage.getItem('userName') || 'Usuário não identificado';
+            const userEmail = localStorage.getItem('userEmail') || 'Email não informado';
+
+            document.getElementById('user-name').innerText = `Nome: ${userName}`;
+            document.getElementById('user-email').innerText = `Email: ${userEmail}`;
+            document.getElementById('account-info').style.display = 'block';
+        }
+
+        const contentDiv = document.getElementById('content');
+        const menuItems = document.querySelectorAll('.aside_list-item');
+
+        menuItems.forEach(item => {
+            item.addEventListener('click', function() {
+                document.getElementById('account-info').style.display = 'none';
+                const section = item.getAttribute('data-section');
+                if (section === 'minhas-compras') {
+                    contentDiv.innerHTML = '<h2>Minhas Compras</h2><ul><li>Compra 1</li><li>Compra 2</li></ul>';
+                } else if (section === 'minhas-listas') {
+                    displayLists();
+                } else if (section === 'meu-cadastro') {
+                    contentDiv.innerHTML = `
+                        <h2>Meu Cadastro</h2>
+                        <form id="update-account-form">
+                            <label for="nome">Nome:</label>
+                            <input type="text" id="nome" name="nome" value="${localStorage.getItem('userName') || ''}">
+                            <label for="email">Email:</label>
+                            <input type="email" id="email" name="email" value="${localStorage.getItem('userEmail') || ''}">
+                            <label for="senha">Senha:</label>
+                            <input type="password" id="senha" name="senha">
+                            <button type="submit">Atualizar</button>
+                        </form>
+                    `;
+                    document.getElementById('update-account-form').addEventListener('submit', function(event) {
+                        event.preventDefault();
+                        const nome = document.getElementById('nome').value;
+                        const email = document.getElementById('email').value;
+                        localStorage.setItem('userName', nome);
+                        localStorage.setItem('userEmail', email);
+                        alert('Informações atualizadas com sucesso!');
+                        loadAccountInfo();
+                    });
+                }
+            });
+        });
+
+        function displayLists() {
+            const lists = JSON.parse(localStorage.getItem('lists')) || [];
+            contentDiv.innerHTML = '<h2>Minhas Listas</h2><ul id="list-container"></ul>';
+            const listContainer = document.getElementById('list-container');
+            lists.forEach((list, index) => {
+                const listItem = document.createElement('li');
+                listItem.className = 'list-item';
+                listItem.innerHTML = `${list} <button class="delete-btn" data-index="${index}">Excluir</button>`;
+                listContainer.appendChild(listItem);
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = this.getAttribute('data-index');
+                    deleteList(index);
+                });
+            });
+        }
+
+        function deleteList(index) {
+            let lists = JSON.parse(localStorage.getItem('lists')) || [];
+            lists.splice(index, 1);
+            localStorage.setItem('lists', JSON.stringify(lists));
+            displayLists();
+        }
+
+        // Carregar informações da conta ao iniciar
+        loadAccountInfo();
+    </script>
+</body>
+</html>
